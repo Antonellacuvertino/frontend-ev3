@@ -1,6 +1,3 @@
-// src/pages/RegistroUsuario.js
-// ✅ Vista de registro de usuario (diseño + guardado en localStorage)
-// Luego podrás reemplazar esto por llamadas reales al backend.
 
 import React, { useState } from "react";
 
