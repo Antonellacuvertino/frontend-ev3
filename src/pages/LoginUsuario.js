@@ -1,19 +1,18 @@
-// src/pages/LoginUsuario.js
 
 import React, { useState } from "react";
-import axios from "axios"; // Importar AXIOS
-// import { useNavigate } from "react-router-dom"; // Si necesitas redirigir después del login
-// import { useAuth } from "../context/AuthContext"; // Si usas contexto para guardar la sesión
+import axios from "axios";
+// import { useNavigate } from "react-router-dom";
+// import { useAuth } from "../context/AuthContext";
 
-// URL base de la API (Tomada de Vercel/Render)
-const API_BASE = process.env.REACT_APP_API_BASE_URL || "http://localhost:8081";
+// URL base de la API (Usamos la misma lógica codificada por si acaso)
+const API_BASE = "https://backend-ev3.onrender.com";
 
 export default function LoginUsuario() {
   const [form, setForm] = useState({
     correo: "",
     password: "",
   });
-  const [error, setError] = useState(""); // Nuevo estado para errores
+  const [error, setError] = useState("");
   // const { login } = useAuth(); // Descomentar si implementas la lógica de AuthContext
 
   const handleChange = (e) => {
@@ -23,38 +22,33 @@ export default function LoginUsuario() {
 
   const handleSubmit = async (e) => { // Función ahora es asíncrona
     e.preventDefault();
-    setError(""); // Limpiar errores
+    setError("");
 
-    const API_URL = `${API_BASE}/api/login`; // Reemplaza /api/login con tu ruta real si es diferente
+    const API_URL = `${API_BASE}/api/auth/login`; // RUTA CORREGIDA
 
     try {
-      // ⚠️ IMPORTANTE: El backend espera "correo" y "password" en el body.
       const res = await axios.post(API_URL, {
-        correo: form.correo,
+        username: form.correo, // ¡ATENCIÓN! Spring Security por defecto usa 'username'
         password: form.password,
       });
 
-      // Si el backend devuelve un token o datos de usuario, lo manejas aquí
-      // login(res.data.token, res.data.user); // Lógica de AuthContext si la implementas
-
+      // Lógica exitosa: guardar token y redirigir
+      console.log("Login exitoso:", res.data);
       alert("Inicio de sesión exitoso. Redirigiendo...");
-      // navigate("/"); // Redirigir a Home o al panel de usuario
 
     } catch (e) {
       console.error("Fallo el login:", e);
-      // Asume que 401/403 significa credenciales incorrectas, cualquier otro error es un fallo de conexión
       if (e.response && (e.response.status === 401 || e.response.status === 403)) {
-         setError("Credenciales incorrectas. Intenta de nuevo.");
+         setError("Credenciales incorrectas.");
       } else {
-         setError("Error de conexión con el servidor. Revisa logs.");
+         setError("Error de conexión con el servidor.");
       }
     }
   };
 
   return (
     <div className="container py-4">
-      {/* ... (código del logo) ... */}
-
+      {/* Logo + nombre empresa */}
       <div className="text-center mb-4">
         <img
           src="/img/logo.png"
@@ -64,6 +58,7 @@ export default function LoginUsuario() {
         <h2 className="mt-2">cats-shop</h2>
       </div>
 
+      {/* Card central como el mockup del login */}
       <div className="row justify-content-center">
         <div className="col-md-6 col-lg-4">
           <div className="card shadow-sm">
