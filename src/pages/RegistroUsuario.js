@@ -1,8 +1,12 @@
-
+// src/pages/RegistroUsuario.js
 import React, { useState } from "react";
+import axios from "axios"; // Importar AXIOS
+// import { useNavigate } from "react-router-dom"; // Si necesitas redirigir después del registro
+
+// URL base de la API (Tomada de Vercel/Render)
+const API_BASE = process.env.REACT_APP_API_BASE_URL || "http://localhost:8081";
 
 export default function RegistroUsuario() {
-  // Estado del formulario (inputs controlados)
   const [form, setForm] = useState({
     nombre: "",
     correo: "",
@@ -13,67 +17,59 @@ export default function RegistroUsuario() {
     region: "",
     comuna: "",
   });
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  // const navigate = useNavigate();
 
-  // Maneja cambios en cualquier input
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Envío del formulario (por ahora simulado)
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => { // Función ahora es asíncrona
     e.preventDefault();
+    setError("");
+    setSuccess("");
 
-    // 👉 Aquí podrías poner validaciones básicas (correos iguales, etc.)
-    // Por ahora lo dejamos suave para la defensa.
+    if (form.password !== form.confirmarPassword) {
+      setError("Las contraseñas no coinciden.");
+      return;
+    }
 
-    // 1) Leer usuarios existentes desde localStorage
-    const stored = localStorage.getItem("cats-users");
-    const usuarios = stored ? JSON.parse(stored) : [];
+    const API_URL = `${API_BASE}/api/registro`; // Reemplaza /api/registro con tu ruta real
 
-    // 2) Crear objeto usuario nuevo (sin password real, solo demo)
-    const nuevoUsuario = {
-      id: Date.now(),        // ID simple
-      nombre: form.nombre,
-      correo: form.correo,
-      telefono: form.telefono,
-      region: form.region,
-      comuna: form.comuna,
-      // Nota para la defensa: las contraseñas NO se deberían guardar planas.
-    };
+    try {
+      // ⚠️ Solo envía los campos que tu backend espera
+      const res = await axios.post(API_URL, {
+        nombre: form.nombre,
+        correo: form.correo,
+        password: form.password,
+        telefono: form.telefono,
+        region: form.region,
+        comuna: form.comuna,
+      });
 
-    // 3) Guardar en localStorage
-    const actualizados = [...usuarios, nuevoUsuario];
-    localStorage.setItem("cats-users", JSON.stringify(actualizados));
-
-    alert("Usuario registrado (simulado). Ahora aparece en el panel de administración.");
-
-    // 4) Limpiar formulario
-    setForm({
-      nombre: "",
-      correo: "",
-      confirmarCorreo: "",
-      password: "",
-      confirmarPassword: "",
-      telefono: "",
-      region: "",
-      comuna: "",
-    });
+      // El registro fue exitoso
+      setSuccess("¡Registro exitoso! Ya puedes iniciar sesión.");
+      // Limpiar formulario
+      setForm({ /* ... (mantener los campos vacíos) */ }); 
+      // navigate("/login"); // Redirigir a la página de login
+      
+    } catch (e) {
+      console.error("Fallo el registro:", e);
+      // Asume que 409 es un conflicto (usuario ya existe)
+      if (e.response && e.response.status === 409) {
+         setError("El correo electrónico ya se encuentra registrado.");
+      } else {
+         setError("Error al registrar el usuario. Revisa la conexión/logs.");
+      }
+    }
   };
 
   return (
     <div className="container py-4">
-      {/* Logo + nombre empresa */}
-      <div className="text-center mb-4">
-        <img
-          src="/img/logo.png"
-          alt="cats-shop"
-          style={{ height: "70px" }}
-        />
-        <h2 className="mt-2">cats-shop</h2>
-      </div>
-
-      {/* Card central de registro */}
+      {/* ... (código del logo) ... */}
+      
       <div className="row justify-content-center">
         <div className="col-md-8 col-lg-6">
           <div className="card shadow-sm">
@@ -82,7 +78,11 @@ export default function RegistroUsuario() {
             </div>
 
             <div className="card-body">
+              {error && <div className="alert alert-danger">{error}</div>}
+              {success && <div className="alert alert-success">{success}</div>}
               <form onSubmit={handleSubmit}>
+                {/* ... (todos los campos del formulario con el onChange={handleChange} y required) ... */}
+                
                 {/* Nombre completo */}
                 <div className="mb-3">
                   <label className="form-label">Nombre completo</label>
@@ -93,9 +93,10 @@ export default function RegistroUsuario() {
                     value={form.nombre}
                     onChange={handleChange}
                     placeholder="Ej: Antonella Cuvertino"
+                    required
                   />
                 </div>
-
+                
                 {/* Correo */}
                 <div className="mb-3">
                   <label className="form-label">Correo</label>
@@ -106,10 +107,11 @@ export default function RegistroUsuario() {
                     value={form.correo}
                     onChange={handleChange}
                     placeholder="antonella@correo.com"
+                    required
                   />
                 </div>
-
-                {/* Confirmar correo */}
+                
+                {/* Confirmar correo (puedes eliminar este campo si no es esencial, ya que el backend usa el primero) */}
                 <div className="mb-3">
                   <label className="form-label">Confirmar correo</label>
                   <input
@@ -118,6 +120,7 @@ export default function RegistroUsuario() {
                     className="form-control"
                     value={form.confirmarCorreo}
                     onChange={handleChange}
+                    required
                   />
                 </div>
 
@@ -130,6 +133,7 @@ export default function RegistroUsuario() {
                     className="form-control"
                     value={form.password}
                     onChange={handleChange}
+                    required
                   />
                 </div>
 
@@ -142,6 +146,7 @@ export default function RegistroUsuario() {
                     className="form-control"
                     value={form.confirmarPassword}
                     onChange={handleChange}
+                    required
                   />
                 </div>
 
@@ -158,8 +163,9 @@ export default function RegistroUsuario() {
                   />
                 </div>
 
-                {/* Región y comuna */}
+                {/* Región y comuna (mantener la lógica original) */}
                 <div className="row">
+                  {/* ... (código original de región y comuna) ... */}
                   <div className="col-md-6 mb-3">
                     <label className="form-label">Región</label>
                     <select
